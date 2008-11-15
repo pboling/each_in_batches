@@ -14,11 +14,11 @@ BolingForBatches
 Installation
 ============
 
-SVN:
+Git:
 
-svn checkout http://boling-for-batches.googlecode.com/svn/trunk/boling_for_batches
+./script/plugin install http://github.com/pboling/boling_for_batches/tree/master
 
-Rails Plugin:
+SVN (deprecated, no longer updated, install git!):
 
 ./script/plugin install http://boling-for-batches.googlecode.com/svn/trunk/boling_for_batches
 
