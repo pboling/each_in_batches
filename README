@@ -16,7 +16,7 @@ Installation
 
 Git:
 
-./script/plugin install http://github.com/pboling/boling_for_batches/tree/master
+./script/plugin install git://github.com/pboling/boling_for_batches/tree/master
 
 SVN (deprecated, no longer updated, install git!):
 
