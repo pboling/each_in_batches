@@ -217,7 +217,7 @@ module EachInBatches
       end
     end
 
-    def print_results(verbose = true)
+    def print_results(verbose = false)
       printf 'Results...'
       printf "Average time per complete batch was %.1f seconds\n", (self.total_time/Float(self.num_runs)) unless self.num_runs < 1
       printf "Total time elapsed was %.1f seconds (about #{pluralize(self.elapsed_time/60, 'minute')})\n", (self.elapsed_time)
