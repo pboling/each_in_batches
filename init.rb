@@ -1,2 +1,2 @@
 # Include hook code here
-require 'boling_for_batches'
+require 'each_in_batches'

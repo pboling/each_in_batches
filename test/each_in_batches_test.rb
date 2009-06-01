@@ -1,6 +1,6 @@
 require 'test/unit'
 
-class BolingForBatchesTest < Test::Unit::TestCase
+class EachInBatchesTest < Test::Unit::TestCase
   # Replace this with your real tests.
   def test_this_plugin
     flunk

@@ -1,78 +1,102 @@
-BolingForBatches
+Introduction
 ================
 
-	I often need to execute really large computations on really large data sets.  
-	I usually end up writing a rake task to do it, which calls methods in my models.  
-	But something about the process bugged me.  Each time I had to re-implement my 
-	'batching code' that allowed me to not chew up GB after GB of memory due to 
-	klass.find(:all, :include => [:everything_under_the_sun]). Re-implementation of 
-	the same logic over and over across many projects is not very DRY, so I got out 
-	my blow torch and lit it up.  The difficulty was that the part that was different 
-	each time I batched was at the center of the code, right in the middle of the 
-	batch loop.  But I didn't let that stop me!
+  From BolingForBatches:
+    I often need to execute really large computations on really large data sets.
+    I usually end up writing a rake task to do it, which calls methods in my models.
+    But something about the process bugged me.  Each time I had to re-implement my
+    'batching code' that allowed me to not chew up GB after GB of memory due to
+    klass.find(:all, :include => [:everything_under_the_sun]). Re-implementation of
+    the same logic over and over across many projects is not very DRY, so I got out
+    my blow torch and lit it up.  The difficulty was that the part that was different
+    each time I batched was at the center of the code, right in the middle of the
+    batch loop.  But I didn't let that stop me!
+
+  EachInBatches:
+    I needed to iterate over the results and perform more actions than a single
+    method would provide.  I didn't want to write a method in my app that performed
+    the needed functionality as I felt the plugin should support this directly.
+    I modified the original plugin so that it takes a block instead of a method.
+    It will pass the object instance to the block.  It works pretty much the same
+    as Class.find(:all).each {|x| do something}, except in batches n that you
+    specify with :batch_size.
 
 Installation
 ============
 
-Git:
-
-./script/plugin install git://github.com/pboling/boling_for_batches/tree/master
-
-SVN (deprecated, no longer updated, install git!):
-
-./script/plugin install http://boling-for-batches.googlecode.com/svn/trunk/boling_for_batches
+    ./script/plugin install git://github.com/wickkidd/each_in_batches.git
 
 Example
 =======
           
-  #Setup your new batch, and tell it what options to use, and what class to run batches of
-  batch = BolingForBatches::Batch.new(:klass => Payment, :select => "DISTINCT transaction_id", :batch_size => 50, :order => 'transaction_id')
+  To create a new Batch, call Batch#new pass it the class and any additional arguements (all as a hash).
+
+    batch = EachInBatches::Batch.new(:klass => Payment, :select => \"DISTINCT transaction_id\", :batch_size => 50, :order => 'transaction_id')
+
+  To process the batched data, pass a block to Batch#run the same way you would to an object returned by Class.find(:all).each.
+  Batch#run will pass the data to your block, one at a time, in batches set by the :batch_size arguement.
+
+    batch.run {|x| puts x.id; puts x.transaction_id}
+
+
+  Print the results!
+
+    batch.print_results
+
+  Or...
+
+  Consolidate your code if you prefer
   
-  #Run a specific instance method on each record in each batch, and send the rest of the params to that method.
-  batch.run(:remove_duplicates, false, true, true)
-  
-  #Print the results!
-  batch.print_results
+    EachInBatches::Batch.new(:klass => Payment, :select => \"DISTINCT transaction_id\", :batch_size => 50, :order => 'transaction_id', :show_results => true).run{|x| puts x.id; puts x.transaction_id}
+
 
 Configuration
 =============
 
-Options for the initializer (Batch.new) method are:
+  Arguements for the initializer (Batch.new) method are:
 
-  :klass         - Usage: :klass => MyClass
-                    Required, as this is the class that will be batched
+    Required:
 
-  :include       - Usage: :include => [:assoc]
-                    Optional
+      :klass         - Usage: :klass => MyClass
+                        Required, as this is the class that will be batched
 
-  :select       - Usage: :select => "DISTINCT field_name"
-                              or
-                         :select => "field1, field2, field3"
+    Optional:
 
-  :order         - Usage: :order => "field DESC"
+      :include       - Usage: :include => [:assoc]
+                        Optional
 
-  :conditions    - Usage: :conditions => ["field1 is not null and field2 = ?", x]
+      :select        - Usage: :select => "DISTINCT field_name"
+                                  or
+                              :select => "field1, field2, field3"
 
-  :verbose       - Usage: :verbose => 'yes' or 'no'
-                    Sets verbosity of output
-                  Default: yes (if not provided)
-                  
-  :batch_size    - Usage: :batch_size => x
-                    Where x is some number.
-                    How many AR Objects should be processed at once?
-                  Default: 50 (if not provided)
-                  
-  :last_batch   - Usage: :last_batch => x
-                    Where x is some number.
-                    Only process up to and including batch #x.
-                      Batch numbers start at 0 for the first batch.
-                  Default: won't be used (no limit if not provided)
-                  
-  :first_batch  - Usage: first_batch => x
-                    Where x is some number.
-                    Begin processing batches beginning at batch #x.
-                      Batch numbers start at 0 for the first batch.
-                  Default: won't be used (no offset if not provided)
+      :order         - Usage: :order => "field DESC"
+
+      :conditions    - Usage: :conditions => ["field1 is not null and field2 = ?", x]
+
+      :verbose       - Usage: :verbose => true or false
+                        Sets verbosity of output
+                        Default: false (if not provided)
+
+      :batch_size    - Usage: :batch_size => x
+                        Where x is some number.
+                        How many AR Objects should be processed at once?
+                        Default: 50 (if not provided)
+
+      :last_batch    - Usage: :last_batch => x
+                        Where x is some number.
+                        Only process up to and including batch #x.
+                          Batch numbers start at 0 for the first batch.
+                        Default: won't be used (no limit if not provided)
+
+      :first_batch   - Usage: first_batch => x
+                        Where x is some number.
+                        Begin processing batches beginning at batch #x.
+                          Batch numbers start at 0 for the first batch.
+                        Default: won't be used (no offset if not provided)
+
+      :show_results  - Usage: :show_results => true or false
+                        Prints statistics about the results of Batch#run.
+                        Default: true if verbose is set to true and :show_results is not provided, otherwise false
                     
 Output
 ======
@@ -90,4 +114,3 @@ License
 	Copyright (c) 2008 Peter H. Boling, released under the MIT license
 	
 	Or in other words have fun, and don't blame me!
-	
