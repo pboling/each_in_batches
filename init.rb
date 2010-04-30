@@ -1,2 +1,2 @@
-# Include hook code here
+require 'active_support'
 require 'boling_for_batches'

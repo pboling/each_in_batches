@@ -11,6 +11,16 @@ BolingForBatches
 	each time I batched was at the center of the code, right in the middle of the 
 	batch loop.  But I didn't let that stop me!
 
+Why this plugin is [WAY] better than Standard Rails Batching
+===============================================
+1. I've been doing batching a lot longer
+2. Metrics.  I measure stuff.
+3. I can batch from the top down (a.k.a backwards), waking it possible to DELETE things in batches.
+		A. If you've never tried using the built-in rails batching for deleting millions of records... don't start now.  Use this plugin instead.
+4. I promise to update the Readme with documentation about this backwards batching in the next release.  For now, just check ma sources.
+5. Exception Handling.  Exceptions occurring within the batching can be rescued, in a customizable fashion, which means that the process doesn't need to die on batch 309,675 of 402,540.
+6. New features.  Watch this space!
+
 Installation
 ============
 
@@ -73,7 +83,9 @@ Options for the initializer (Batch.new) method are:
                     Begin processing batches beginning at batch #x.
                       Batch numbers start at 0 for the first batch.
                   Default: won't be used (no offset if not provided)
-                    
+
+  There is a lot more. Check the source.  I'll update this list soon.  
+  
 Output
 ======
       
