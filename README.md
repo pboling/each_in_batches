@@ -1,4 +1,6 @@
-# EachInBatches (Originally EachInBatches)
+# EachInBatches
+
+(Originally BolingForBatches)
 
 ### NOTE:
 I am resurrecting this code because I still have this recurring need, and Rail's native batching doesn't cut mustard.  
