@@ -1,10 +1,12 @@
 # BolingForBatches
-#Copyright ©2008 Peter H. Boling, released under the MIT license
-#Plugin for Rails: A Better Way To Run Heavy Queries
-#License:  MIT License
-#Labels:   Ruby, Rails, Plugin
-#Project owners:
+# Copyright ©2008-2015 Peter H. Boling, released under the MIT license
+# Gem Plugin for Rails: A Better Way To Run Heavy Queries
+# License:  MIT License
+# Labels:   Ruby, Rails, Gem
+# Project owners:
 #    peter.boling
+require "boling_for_batches/version"
+
 module BolingForBatches
 
   class Batch
@@ -12,74 +14,74 @@ module BolingForBatches
     include ActionView::Helpers::TextHelper
 
     attr_accessor(:klass,
-      :verbose,
-      :include,
-      :select,
-      :conditions,
-      :order,
-      :batch_size,
-      :last_batch,
-      :first_batch,
-      :offset_array,
-      :total_records,
-      :size_of_last_run,
-      :extra_run,
-      :num_runs,
-      :total_time,
-      :elapsed_time,
-      :start_time,
-      :end_time,
-      :overhead_time,
-      :completion_times,
-      :skipped_batches,
-      :method_name,
-      :backwards,
-      :method_klass,
-      :send_batch,
-      :run_klass_method,
-      :before_klass_method,
-      :after_klass_method,
-      :before_instance_method,
-      :after_instance_method,
-      :error_notification,
-      :skip_errors)
-  
+                  :verbose,
+                  :include,
+                  :select,
+                  :conditions,
+                  :order,
+                  :batch_size,
+                  :last_batch,
+                  :first_batch,
+                  :offset_array,
+                  :total_records,
+                  :size_of_last_run,
+                  :extra_run,
+                  :num_runs,
+                  :total_time,
+                  :elapsed_time,
+                  :start_time,
+                  :end_time,
+                  :overhead_time,
+                  :completion_times,
+                  :skipped_batches,
+                  :method_name,
+                  :backwards,
+                  :method_klass,
+                  :send_batch,
+                  :run_klass_method,
+                  :before_klass_method,
+                  :after_klass_method,
+                  :before_instance_method,
+                  :after_instance_method,
+                  :error_notification,
+                  :skip_errors)
+
     def print_debug
       print "klass: #{klass}\nverbose: #{verbose}\ninclude: #{include}\nselect: #{select}\nconditions: #{conditions}\norder: #{order}\nbatch_size: #{batch_size}\nlast_batch: #{last_batch}\nfirst_batch: #{first_batch}\noffset_array: #{offset_array}\ntotal_records: #{total_records}\nsize_of_last_run: #{size_of_last_run}\nextra_run: #{extra_run}\nnum_runs: #{num_runs}\ntotal_time: #{total_time}\nelapsed_time: #{elapsed_time}\nstart_time: #{start_time}\nend_time: #{end_time}\noverhead_time: #{overhead_time}\ncompletion_times: #{completion_times.inspect}\nmethod_name: #{method_name}\n"
     end
-    
+
     def self.help_text
       "Options are:
-  
+
         :klass         - Usage: :klass => MyClass
                           Required, as this is the class that will be batched
-  
+
         :include       - Usage: :include => [:assoc]
                           Optional
-  
+
         :select       - Usage: :select => \"DISTINCT field_name\"
                                     or
                                :select => \"field1, field2, field3\"
-  
+
         :order         - Usage: :order => \"field DESC\"
-  
+
         :conditions    - Usage: :conditions => [\"field1 is not null and field2 = ?\", x]
-  
+
         :verbose       - Usage: :verbose => true # or any of ['true','false',false] or an integer value 0, 1, 2 with 0 being no output, and 2 being most verbose
                           Sets verbosity of output
                         Default: true (if not provided)
-                        
+
         :batch_size    - Usage: :batch_size => x
                           Where x is some number.
                           How many AR Objects should be processed at once?
                         Default: 50 (if not provided)
-                        
+
         :last_batch   - Usage: :last_batch => x
                           Where x is some number.
                           Only process up to and including batch #x.
                             Batch numbers start at 0 for the first batch.
                         Default: won't be used (no limit if not provided)
-                        
+
         :first_batch  - Usage: first_batch => x
                           Where x is some number.
                           Begin processing batches beginning at batch #x.
@@ -138,7 +140,7 @@ module BolingForBatches
             batch.run(:remove_duplicates, false, true, true)
             #Print the results!
             batch.print_results
-        
+
         Interpreting the output:
           '[O]' means the batch was skipped due to an offset.
           '[L]' means the batch was skipped due to a limit.
@@ -148,11 +150,11 @@ module BolingForBatches
           { x / x / x } means { batch# / total batches / limit [P] or length [C] of records in batch)
         "
     end
-    
+
     def self.check(*args)
       if args.empty?
         puts self.help_text and return false
-      #Are the values of these parameters going to be valid integers?
+        #Are the values of these parameters going to be valid integers?
       elsif args.first[:batch_size] && (args.first[:batch_size].to_s.gsub(/\d/,'foo') == args.first[:batch_size].to_s)
         puts self.help_text and return false
       elsif args.first[:last_batch] && (args.first[:last_batch].to_s.gsub(/\d/,'foo') == args.first[:last_batch].to_s)
@@ -163,7 +165,7 @@ module BolingForBatches
         return true
       end
     end
-    
+
     def initialize(*args)
       return false unless Batch.check(*args)
       @klass = args.first[:klass]
@@ -173,13 +175,13 @@ module BolingForBatches
       @conditions = args.first[:conditions]
       #Accommodate verbose whether passed in as as a Boolean, String or Integer
       @verbose = case args.first[:verbose]
-        when nil then 2
-        when 'false' then 0
-        when false then 0
-        when true then 2
-        when 'true' then 2
-        else args.first[:verbose]
-      end
+                   when nil then 2
+                   when 'false' then 0
+                   when false then 0
+                   when true then 2
+                   when 'true' then 2
+                   else args.first[:verbose]
+                 end
       @backwards = args.first[:backwards].nil? ? false : !(args.first[:backwards] == 'false' || args.first[:backwards] == false)
       @skip_errors = args.first[:skip_errors].nil? ? false : !(args.first[:skip_errors] == 'false' || args.first[:skip_errors] == false)
       @error_notification = args.first[:error_notification].is_a?(Hash) ? args.first[:error_notification] : {}
@@ -313,19 +315,19 @@ module BolingForBatches
           beg_time = Time.now
           puts "[P] #{show_status(current_batch, limite)}" if self.verbose > 1
 
-            if self.send_batch
-              recs = self.do_query(current_batch, offset, limite)
-              len = recs.length
-              self.rescuer(current_batch, limite) do
-                yield recs
-              end
-            else
-              len = self.do_query(current_batch, offset, limite).each_with_index do |x, index|
-                self.rescuer(current_batch, limite, index) do
-                  yield x
-                end
-              end.length
+          if self.send_batch
+            recs = self.do_query(current_batch, offset, limite)
+            len = recs.length
+            self.rescuer(current_batch, limite) do
+              yield recs
             end
+          else
+            len = self.do_query(current_batch, offset, limite).each_with_index do |x, index|
+              self.rescuer(current_batch, limite, index) do
+                yield x
+              end
+            end.length
+          end
 
           #stop the timer
           fin_time = Time.now
@@ -394,8 +396,9 @@ module BolingForBatches
         end
       end
     end
-  
+
   end
 end
 
-#Copyright ©2008 Peter H. Boling, released under the MIT license
+# Copyright ©2008-2015 Peter H. Boling, released under the MIT license
+
