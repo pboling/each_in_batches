@@ -15,6 +15,7 @@ module EachInBatches
     attr_accessor :arel
     attr_accessor :verbose
     attr_accessor :batch_size
+    attr_accessor :backwards
     attr_accessor :last_batch
     attr_accessor :first_batch
     attr_accessor :offset_array
@@ -25,12 +26,13 @@ module EachInBatches
     attr_accessor :total_time
     attr_accessor :elapsed_time
     attr_accessor :start_time
-    attr_accessor :end_time0
+    attr_accessor :end_time
+    attr_accessor :overhead_time
     attr_accessor :completion_times
     attr_accessor :show_results
 
     def print_debug
-      print "verbose: #{verbose}\nbatch_size: #{batch_size}\nlast_batch: #{last_batch}\nfirst_batch: #{first_batch}\noffset_array: #{offset_array}\ntotal_records: #{total_records}\nsize_of_last_run: #{size_of_last_run}\nextra_run: #{extra_run}\nnum_runs: #{num_runs}\ntotal_time: #{total_time}\nelapsed_time: #{elapsed_time}\nstart_time: #{start_time}\nend_time: #{end_time}\ncompletion_times: #{completion_times.inspect}\nshow_results: #{show_results.inspect}\n"
+      print "verbose: #{verbose}\nbatch_size: #{batch_size}\nbackwards: #{backwards}\nlast_batch: #{last_batch}\nfirst_batch: #{first_batch}\noffset_array: #{offset_array}\ntotal_records: #{total_records}\nsize_of_last_run: #{size_of_last_run}\nextra_run: #{extra_run}\nnum_runs: #{num_runs}\ntotal_time: #{total_time}\nelapsed_time: #{elapsed_time}\nstart_time: #{start_time}\nend_time: #{end_time}\noverhead_time: #{overhead_time}\ncompletion_times: #{completion_times.inspect}\nshow_results: #{show_results.inspect}\n"
     end
 
     def self.help_text
@@ -43,6 +45,12 @@ module EachInBatches
                             Required, as this is the class that will be batched
 
         Optional:
+
+          :backwards     - Usage: :backwards => true or false
+                            Whether or not the batches should be processed in reverse order or not.
+                            NOTE: deletions must be processed backwards or you eat the set as you process
+                                  and end the run half way through
+                            Default: false (if not provided)
 
           :verbose       - Usage: :verbose => true or false
                             Sets verbosity of output
@@ -246,15 +254,18 @@ module EachInBatches
     def print_results(verbose = self.verbose)
       printf "Results..."
       printf "Average time per complete batch was %.1f seconds\n", (self.total_time/Float(self.num_runs)) unless self.num_runs < 1
-      printf "Total time elapsed was %.1f seconds (about #{self.elapsed_time/60} minute(s)\n", (self.elapsed_time)
-      puts "Total # of #{self.arel} - Before: #{self.total_records}"
-      puts "Total # of #{self.arel} - After : #{self.arel.count(:include => self.include, :conditions => self.conditions)}"
-      if verbose
-        puts "Completion times for each batch:"
-        self.completion_times.each do |x|
-          puts "Batch #{x[0]}: Time Elapsed: #{x[1][:elapsed]}s, Begin: #{x[1][:begin_time].strftime("%m.%d.%Y %I:%M:%S %p")}, End: #{x[1][:end_time].strftime("%m.%d.%Y %I:%M:%S %p")}"
-        end
+      printf "Total time elapsed was %.1f seconds, about #{self.elapsed_time/60} minute(s)\n", (self.elapsed_time)
+      if self.backwards # When backwards might be deleting records
+        puts "Total # of #{self.arel.table} - Before: #{self.total_records}"
+        puts "Total # of #{self.arel.table} - After : #{self.arel.count}"
       end
+      # With a large number of batches this is far too verbose, but don't want to introduce a more complicated verbosity setting.
+      # if verbose
+      #   puts "Completion times for each batch:"
+      #   self.completion_times.each do |x|
+      #     puts "Batch #{x[0]}: Time Elapsed: #{x[1][:elapsed]}s, Begin: #{x[1][:begin_time].strftime("%m.%d.%Y %I:%M:%S %p")}, End: #{x[1][:end_time].strftime("%m.%d.%Y %I:%M:%S %p")}"
+      #   end
+      # end
     end
 
   end
