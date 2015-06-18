@@ -21,8 +21,7 @@ batch loop.  But I didn't let that stop me!
 2. Metrics.  I measure stuff.
 3. I can batch from the top down (a.k.a backwards), making it possible to DELETE things in batches.
 		A. If you've never tried using the built-in rails batching for deleting millions of records... don't start now.  Use this gem instead.
-4. Exception Handling.  Exceptions occurring within the batching can be rescued, in a customizable fashion, which means that the process doesn't need to die on batch 309,675 of 402,540.
-5. Merged in the EachInBatches fork (from Brian Kidd):
+4. Merged in the EachInBatches fork (from Brian Kidd):
     I needed to iterate over the results and perform more actions than a single
     method would provide.  I didn't want to write a method in my app that performed
     the needed functionality as I felt the plugin should support this directly.
