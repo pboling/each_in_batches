@@ -6,19 +6,14 @@
 # Project owners:
 #    Peter Boling, Brian Kidd
 require "each_in_batches/version"
+require "active_record"
 
 module EachInBatches
 
   class Batch
-    #We need to include this so we have access to the pluralize method we're using in the print_results
-    include ActionView::Helpers::TextHelper
 
-    attr_accessor :klass
+    attr_accessor :arel
     attr_accessor :verbose
-    attr_accessor :include
-    attr_accessor :select
-    attr_accessor :conditions
-    attr_accessor :order
     attr_accessor :batch_size
     attr_accessor :last_batch
     attr_accessor :first_batch
@@ -35,29 +30,19 @@ module EachInBatches
     attr_accessor :show_results
 
     def print_debug
-      print "klass: #{klass}\nverbose: #{verbose}\ninclude: #{include}\nselect: #{select}\nconditions: #{conditions}\norder: #{order}\nbatch_size: #{batch_size}\nlast_batch: #{last_batch}\nfirst_batch: #{first_batch}\noffset_array: #{offset_array}\ntotal_records: #{total_records}\nsize_of_last_run: #{size_of_last_run}\nextra_run: #{extra_run}\nnum_runs: #{num_runs}\ntotal_time: #{total_time}\nelapsed_time: #{elapsed_time}\nstart_time: #{start_time}\nend_time: #{end_time}\ncompletion_times: #{completion_times.inspect}\nshow_results: #{show_results.inspect}\n"
+      print "verbose: #{verbose}\nbatch_size: #{batch_size}\nlast_batch: #{last_batch}\nfirst_batch: #{first_batch}\noffset_array: #{offset_array}\ntotal_records: #{total_records}\nsize_of_last_run: #{size_of_last_run}\nextra_run: #{extra_run}\nnum_runs: #{num_runs}\ntotal_time: #{total_time}\nelapsed_time: #{elapsed_time}\nstart_time: #{start_time}\nend_time: #{end_time}\ncompletion_times: #{completion_times.inspect}\nshow_results: #{show_results.inspect}\n"
     end
 
     def self.help_text
-      "Arguements for the initializer (Batch.new) method are:
+      <<-HEREDOC
+          Arguments for the initializer (Batch.new) method are:
 
         Required:
 
-          :klass         - Usage: :klass => MyClass
+          :arel         - Usage: :arel => MyClass.some_scope.order("some_column ASC")
                             Required, as this is the class that will be batched
 
         Optional:
-
-          :include       - Usage: :include => [:assoc]
-                            Optional
-
-          :select        - Usage: :select => \"DISTINCT field_name\"
-                                      or
-                                  :select => \"field1, field2, field3\"
-
-          :order         - Usage: :order => \"field DESC\"
-
-          :conditions    - Usage: :conditions => [\"field1 is not null and field2 = ?\", x]
 
           :verbose       - Usage: :verbose => true or false
                             Sets verbosity of output
@@ -88,12 +73,15 @@ module EachInBatches
 
          To create a new Batch, call Batch#new and pass it the class and any additional arguements (all as a hash).
 
-           batch = EachInBatches::Batch.new(:klass => Payment, :select => \"DISTINCT transaction_id\", :batch_size => 50, :order => 'transaction_id')
+           batch = EachInBatches::Batch.new(:arel => Payment.canceled.order("transaction_id ASC"), :batch_size => 50)
 
-         To process the batched data, pass a block to Batch#run the same way you would to an object returned by Class.find(:all).each.
-         Batch#run will pass the data to your block, one at a time, in batches set by the :batch_size arguement.
+         To process the batched data, pass a block to Batch#run the same way you would to an object returned by
 
-           batch.run {|x| puts x.id;` puts x.transaction_id}
+           Klass.all.each {|x| x.method}
+
+         Batch#run will pass the data to your block, one at a time, in batches set by the :batch_size argument.
+
+           batch.run {|x| puts x.id; puts x.transaction_id}
 
          Print the results!
 
@@ -103,7 +91,7 @@ module EachInBatches
 
          Consolidate your code if you prefer
 
-           EachInBatches::Batch.new(:klass => Payment, :select => \"DISTINCT transaction_id\", :batch_size => 50, :order => 'transaction_id', :show_results => true).run{|x| puts x.id; puts x.transaction_id}
+           EachInBatches::Batch.new(:arel => Payment.canceled.order("transaction_id ASC"), :batch_size => 50, :show_results => true).run{|x| puts x.id; puts x.transaction_id}
 
        Interpreting the output:
          '[O]' means the batch was skipped due to an offset.
@@ -111,7 +99,7 @@ module EachInBatches
          '[P]' means the batch is processing.
          '[C]' means the batch is complete.
          and yes... it was a coincidence.  This class is not affiliated with 'one laptop per child'
-      "
+      HEREDOC
     end
 
     def self.check(*args)
@@ -131,11 +119,7 @@ module EachInBatches
 
     def initialize(*args)
       return false unless Batch.check(*args)
-      @klass = args.first[:klass]
-      @include = args.first[:include]
-      @select = args.first[:select]
-      @order = args.first[:order]
-      @conditions = args.first[:conditions]
+      @arel = args.first[:arel]
       @verbose = args.first[:verbose].blank? ? false : args.first[:verbose]
       @backwards = args.first[:backwards].nil? ? false : !(args.first[:backwards] == 'false' || args.first[:backwards] == false)
       @batch_size = args.first[:batch_size] ? args.first[:batch_size].is_a?(Integer) ? args.first[:batch_size] : args.first[:batch_size].to_i : 50
@@ -150,7 +134,7 @@ module EachInBatches
       @skipped_batches = []
 
       puts "Counting Records..." if self.verbose
-      @total_records = @klass.count(:all, :include => @include, :conditions => @conditions)
+      @total_records = @arel.count
       @num_runs = @total_records / @batch_size
       @size_of_last_run = @total_records.modulo(@batch_size)
 
@@ -161,7 +145,7 @@ module EachInBatches
         @extra_run = false
       end
 
-      puts "#{klass} Records: #{@total_records}, Batches: #{@num_runs}" if @verbose
+      puts "Records: #{@total_records}, Batches: #{@num_runs}" if @verbose
 
       @last_batch = @num_runs - 1 unless @num_runs == 0 || @last_batch #because batch numbers start at 0 like array indexes, but only if it was not set in *args
 
@@ -177,7 +161,7 @@ module EachInBatches
       end
       while current_batch < @num_runs
         @offset_array << (current_batch * @batch_size)
-        print '.' if @verbose
+        print "." if @verbose
         current_batch += 1
       end
       puts " #{@num_runs} Batches Created" if @verbose
@@ -202,7 +186,7 @@ module EachInBatches
             puts "  Size of Last Run: #{@size_of_last_run}"
           end
         end
-        puts "  Limit of all #{@extra_run ? 'other' : ''} runs: #{@batch_size}" #This is the SQL Limit
+        puts "  Limit of all #{@extra_run ? "other" : ""} runs: #{@batch_size}" #This is the SQL Limit
       end
     end
 
@@ -235,7 +219,7 @@ module EachInBatches
           #start the timer
           beg_time = Time.current
 
-          self.klass.find(:all, :offset => offset, :select => self.select, :limit => self.batch_size, :include => self.include, :conditions => self.conditions, :order => self.order).each {|obj| yield obj}
+          self.arel.limit(limite).offset(offset).each {|obj| yield obj}
 
           #stop the timer
           fin_time = Time.current
@@ -262,9 +246,9 @@ module EachInBatches
     def print_results(verbose = self.verbose)
       printf "Results..."
       printf "Average time per complete batch was %.1f seconds\n", (self.total_time/Float(self.num_runs)) unless self.num_runs < 1
-      printf "Total time elapsed was %.1f seconds (about #{pluralize(self.elapsed_time/60, 'minute')})\n", (self.elapsed_time)
-      puts "Total # of #{self.klass.to_s.pluralize} - Before: #{self.total_records}"
-      puts "Total # of #{self.klass.to_s.pluralize} - After : #{self.klass.count(:include => self.include, :conditions => self.conditions)}"
+      printf "Total time elapsed was %.1f seconds (about #{self.elapsed_time/60} minute(s)\n", (self.elapsed_time)
+      puts "Total # of #{self.arel} - Before: #{self.total_records}"
+      puts "Total # of #{self.arel} - After : #{self.arel.count(:include => self.include, :conditions => self.conditions)}"
       if verbose
         puts "Completion times for each batch:"
         self.completion_times.each do |x|

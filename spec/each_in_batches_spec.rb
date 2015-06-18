@@ -1,11 +1,11 @@
-require 'spec_helper'
+require "spec_helper"
 
 describe EachInBatches do
-  it 'has a version number' do
+  it "has a version number" do
     expect(EachInBatches::VERSION).not_to be nil
   end
 
-  it 'does something useful' do
-    expect(false).to eq(true)
+  it "can instantiate" do
+    expect { EachInBatches::Batch.new }.to_not raise_error
   end
 end
