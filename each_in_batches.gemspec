@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "Batch Processing of Records with Blocks in Rails"
   spec.description   = "Batch Processing of Records with Blocks in Rails"
-  spec.homepage      = "https://github.com/pboling/boling_for_batches"
+  spec.homepage      = "https://github.com/pboling/each_in_batches"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = "exe"
