@@ -18,6 +18,7 @@ module EachInBatches
     attr_accessor :backwards
     attr_accessor :last_batch
     attr_accessor :first_batch
+    attr_accessor :skipped_batches
     attr_accessor :offset_array
     attr_accessor :total_records
     attr_accessor :size_of_last_run
