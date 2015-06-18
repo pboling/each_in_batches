@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'boling_for_batches/version'
+require 'each_in_batches/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "boling_for_batches"
-  spec.version       = BolingForBatches::VERSION
+  spec.name          = "each_in_batches"
+  spec.version       = EachInBatches::VERSION
   spec.authors       = ["Peter Boling"]
   spec.email         = ["peter.boling@gmail.com"]
 
@@ -22,6 +22,9 @@ Gem::Specification.new do |spec|
     spec.metadata['allowed_push_host'] = "TODO: Set to 'http://mygemserver.com' to prevent pushes to rubygems.org, or delete to allow pushes to any server."
   end
 
+  spec.add_dependency "activerecord", "~> 3.2"
+  spec.add_dependency "activesupport", "~> 3.2"
   spec.add_development_dependency "bundler", "~> 1.9"
   spec.add_development_dependency "rake", "~> 10.0"
+  spec.add_development_dependency "rspec", "~> 3.2"
 end
