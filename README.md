@@ -1,5 +1,33 @@
 # EachInBatches
 
+Better than Rails Batching.  Can you batch backwards for destructive tasks?  `each_in_batches` can.
+
+| Project                 |  EachInBatches    |
+|------------------------ | ----------------- |
+| gem name                |  each_in_batches   |
+| license                 |  MIT              |
+| expert support          |  [![Get help on Codementor](https://cdn.codementor.io/badges/get_help_github.svg)](https://www.codementor.io/peterboling?utm_source=github&utm_medium=button&utm_term=peterboling&utm_campaign=github) |
+| download rank               |  [![Total Downloads](https://img.shields.io/gem/rt/each_in_batches.svg)](https://rubygems.org/gems/each_in_batches) |
+| version                 |  [![Gem Version](https://badge.fury.io/rb/each_in_batches.png)](http://badge.fury.io/rb/each_in_batches) |
+| dependencies            |  [![Dependency Status](https://gemnasium.com/pboling/each_in_batches.png)](https://gemnasium.com/pboling/each_in_batches) |
+| code quality            |  [![Code Climate](https://codeclimate.com/github/pboling/each_in_batches.png)](https://codeclimate.com/github/pboling/each_in_batches) |
+| inline documenation     |  [![Inline docs](http://inch-ci.org/github/pboling/each_in_batches.png)](http://inch-ci.org/github/pboling/each_in_batches) |
+| continuous integration  |  [![Build Status](https://secure.travis-ci.org/pboling/each_in_batches.png?branch=master)](https://travis-ci.org/pboling/each_in_batches) |
+| test coverage           |  [![Coverage Status](https://coveralls.io/repos/pboling/each_in_batches/badge.png)](https://coveralls.io/r/pboling/each_in_batches) |
+| homepage                |  [on Github.com][homepage] |
+| documentation           |  [on Rdoc.info][documentation] |
+| live chat               |  [![Join the chat at https://gitter.im/pboling/each_in_batches](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pboling/each_in_batches?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) |
+| Spread ~♡ⓛⓞⓥⓔ♡~      |  [on Coderbits][coderbits], [on Coderwall][coderwall] |
+
+[semver]: http://semver.org/
+[pvc]: http://docs.rubygems.org/read/chapter/16#page74
+[railsbling]: http://www.railsbling.com
+[peterboling]: http://www.peterboling.com
+[coderbits]: https://coderbits.com/pboling
+[coderwall]: http://coderwall.com/pboling
+[documentation]: http://rdoc.info/github/pboling/each_in_batches/frames
+[homepage]: https://github.com/pboling/each_in_batches
+
 (Originally BolingForBatches)
 
 ### NOTE:
