@@ -135,14 +135,14 @@ module EachInBatches
       @last_batch = args.first[:last_batch] ? args.first[:last_batch].is_a?(Integer) ? args.first[:last_batch] : args.first[:last_batch].to_i : false
       @first_batch = args.first[:first_batch] ? args.first[:first_batch].is_a?(Integer) ? args.first[:first_batch] : args.first[:first_batch].to_i : 0
       @show_results = case
-        when args.first[:show_results].blank? && @verbose.blank?; false
-        when args.first[:show_results].blank? && @verbose == true; true
+        when args.first[:show_results].blank? && !verbose?; false
+        when args.first[:show_results].blank? &&  verbose?; true
         else args.first[:show_results]
       end
       @total_time = 0
       @skipped_batches = []
 
-      puts "Counting Records..." if self.verbose
+      puts "Counting Records..." if verbose?
       @total_records = @arel.count
       @num_runs = @total_records / @batch_size
       @size_of_last_run = @total_records.modulo(@batch_size)
@@ -154,13 +154,13 @@ module EachInBatches
         @extra_run = false
       end
 
-      puts "Records: #{@total_records}, Batches: #{@num_runs}" if @verbose
+      puts "Records: #{@total_records}, Batches: #{@num_runs}" if verbose?
 
       @last_batch = @num_runs - 1 unless @num_runs == 0 || @last_batch #because batch numbers start at 0 like array indexes, but only if it was not set in *args
 
       current_batch = 0
       @offset_array = Array.new
-      if @verbose
+      if verbose?
         puts "Batch Numbering Begins With 0 (ZERO) and counts up"
         puts "Batch Size (SQL Limit): #{@batch_size}" #This is the SQL Limit
         puts "First Batch # to run: #{@first_batch}" #This is the number of the first batch to run
@@ -170,18 +170,18 @@ module EachInBatches
       end
       while current_batch < @num_runs
         @offset_array << (current_batch * @batch_size)
-        print "." if @verbose
+        print "." if verbose?
         current_batch += 1
       end
-      puts " #{@num_runs} Batches Created" if @verbose
+      puts " #{@num_runs} Batches Created" if verbose?
       #in order to use batching for record deletion, the offsets need to start with largest first
       if @backwards
         @offset_array.reverse!
-        puts "Backwards Mode:" if @verbose
+        puts "Backwards Mode:" if verbose?
       else
-        puts "Normal Mode:" if @verbose
+        puts "Normal Mode:" if verbose?
       end
-      if @verbose
+      if verbose?
         puts "  First Offset: #{@offset_array.first}"
         puts "  Last Offset: #{@offset_array.last}"
         # technically the last run doesn't need a limit, and we don't technically use a limit on the last run,
@@ -204,10 +204,17 @@ module EachInBatches
       self.completion_times.empty?
     end
 
+    def verbose?
+      !!verbose
+    end
+
     def run(&block)
       return false unless block_given?
       self.start_time = Time.current
-      puts "There are no batches to run" and return false unless self.num_runs > 0
+      unless self.num_runs > 0
+        puts "There are no batches to run" if verbose?
+        return false
+      end
       self.total_time = 0
       self.completion_times = Array.new
       self.offset_array.each_with_index do |offset, current_batch|
@@ -217,13 +224,13 @@ module EachInBatches
           limite = self.batch_size
         end
         if self.first_batch > current_batch
-          print "[O] #{show_status(current_batch, limite)} skipped" if self.verbose
+          print "[O] #{show_status(current_batch, limite)} skipped" if verbose?
           self.skipped_batches << current_batch
         elsif self.last_batch && self.last_batch < current_batch
-          print "[L] #{show_status(current_batch, limite)} skipped" if self.verbose
+          print "[L] #{show_status(current_batch, limite)} skipped" if verbose?
           self.skipped_batches << current_batch
         else
-          print "[P] #{show_status(current_batch, limite)}" if self.verbose
+          print "[P] #{show_status(current_batch, limite)}" if verbose?
 
           #start the timer
           beg_time = Time.current
@@ -235,7 +242,7 @@ module EachInBatches
 
           this_time = fin_time.to_i - beg_time.to_i
           self.total_time += this_time unless extra_run && current_batch == self.num_runs
-          puts "[C] #{show_status(current_batch, limite)} in #{this_time} seconds" if self.verbose
+          puts "[C] #{show_status(current_batch, limite)} in #{this_time} seconds" if verbose?
           self.completion_times << [current_batch, {:elapsed => this_time, :begin_time => beg_time, :end_time => fin_time}]
         end
       end
@@ -244,7 +251,8 @@ module EachInBatches
       self.elapsed_time = (self.end_time.to_i - self.start_time.to_i)
       self.overhead_time = self.elapsed_time - self.total_time
       print_results if self.show_results
-      return "Process Complete"
+      puts "Process Complete" if verbose?
+      return true
     end
 
     def show_status(current_batch, limite)
@@ -261,7 +269,7 @@ module EachInBatches
         puts "Total # of #{self.arel.table} - After : #{self.arel.count}"
       end
       # With a large number of batches this is far too verbose, but don't want to introduce a more complicated verbosity setting.
-      # if verbose
+      # if verbose?
       #   puts "Completion times for each batch:"
       #   self.completion_times.each do |x|
       #     puts "Batch #{x[0]}: Time Elapsed: #{x[1][:elapsed]}s, Begin: #{x[1][:begin_time].strftime("%m.%d.%Y %I:%M:%S %p")}, End: #{x[1][:end_time].strftime("%m.%d.%Y %I:%M:%S %p")}"
