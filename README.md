@@ -110,6 +110,12 @@ Arguements for the initializer (Batch.new) method are:
                         Sets verbosity of output
                         Default: false (if not provided)
 
+      :backwards     - Usage: :backwards => true or false
+                        Using the order supplied for :arel (if any) figures out what the batch set looks like,
+			and begins working from the end rather than the front.
+                        Default: false (if not provided)
+			Example: EachInBatches::Batch.new(:arel => Report.where(company_id: nil).order("id ASC"), :backwards => true, :batch_size => 50).run{|x| x.destroy }
+
       :batch_size    - Usage: :batch_size => x
                         Where x is some number.
                         How many AR Objects should be processed at once?
